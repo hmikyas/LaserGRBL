@@ -172,6 +172,9 @@ namespace LaserGRBL
 
 			List<List<CsPotrace.Curve>> plist = Potrace.PotraceTrace(bmp);
 
+			//absolute
+			list.Add(new GrblCommand("G90"));
+
 			if (c.dir != RasterConverter.ImageProcessor.Direction.None)
 			{
 				using (Bitmap ptb = new Bitmap(bmp.Width, bmp.Height))
@@ -182,8 +185,6 @@ namespace LaserGRBL
 						Potrace.Export2GDIPlus(plist, g, Brushes.Black, null, Math.Max(1, c.res / c.fres));
 						using (Bitmap resampled = RasterConverter.ImageTransform.ResizeImage(ptb, new Size((int)(bmp.Width * c.fres / c.res), (int)(bmp.Height * c.fres / c.res)), true, InterpolationMode.HighQualityBicubic))
 						{
-							//absolute
-							list.Add(new GrblCommand("G90"));
 							//use travel speed
 							list.Add(new GrblCommand(String.Format("F{0}", c.travelSpeed)));
 							//move fast to offset
@@ -195,9 +196,6 @@ namespace LaserGRBL
 
 							//set speed to markspeed						
 							list.Add(new GrblCommand(String.Format("G1 F{0}", c.markSpeed)));
-							//relative
-							list.Add(new GrblCommand("G91"));
-
 
 							c.vectorfilling = true;
 							ImageLine2Line(resampled, c);
@@ -209,8 +207,6 @@ namespace LaserGRBL
 				}
 			}
 
-			//absolute
-			list.Add(new GrblCommand("G90"));
 			//use travel speed
 			list.Add(new GrblCommand(String.Format("F{0}", c.travelSpeed)));
 			//move fast to offset
@@ -284,15 +280,12 @@ namespace LaserGRBL
 
 			//set speed to markspeed						
 			list.Add(new GrblCommand(String.Format("G1 F{0}", c.markSpeed)));
-			//relative
-			list.Add(new GrblCommand("G91"));
 
 			ImageLine2Line(bmp, c);
 
 			//laser off
 			list.Add(new GrblCommand(c.lOff));
-			//absolute
-			list.Add(new GrblCommand("G90"));
+
 			//move fast to origin
 			list.Add(new GrblCommand("G0 X0 Y0"));
 
@@ -332,7 +325,43 @@ namespace LaserGRBL
 			}
 
 			temp = OptimizeLine2Line(temp, c);
+			temp = ToAbsolute(temp, c);	
+
 			list.AddRange(temp);
+		}
+
+		private List<GrblCommand> ToAbsolute(List<GrblCommand> temp, L2LConf c)
+		{
+			List<GrblCommand> rv = new List<GrblCommand>();
+
+			decimal absX = 0;
+			decimal absY = 0;
+
+
+			foreach (GrblCommand cmd in temp)
+			{
+				if (cmd.IsMovement)
+				{
+					GrblCommand toadd = new GrblCommand(cmd.Command);
+
+					if (cmd.X != null)
+					{
+						absX += cmd.X.Number;
+						toadd.X.SetNumber(absX);
+					}
+
+					if (cmd.Y != null)
+					{
+						absY += cmd.Y.Number;
+						toadd.Y.SetNumber(absY);
+					}
+					rv.Add(toadd);
+				}
+				else
+					rv.Add(cmd);
+			}
+
+			return rv;
 		}
 
 		private List<GrblCommand> OptimizeLine2Line(List<GrblCommand> temp, L2LConf c)

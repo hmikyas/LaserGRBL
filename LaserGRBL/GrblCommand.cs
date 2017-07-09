@@ -55,6 +55,9 @@ namespace LaserGRBL
 			public Decimal Number
 			{ get { return mNumber; } }
 
+			public void SetNumber(Decimal value)
+			{  mNumber = value; }
+
 		}
 
 		public void SetOffset(decimal Distance, TimeSpan Time)
@@ -237,8 +240,6 @@ namespace LaserGRBL
 
 		public bool IsPause
 		{ get { return G != null && G.Number == 4; } }
-
-		//G90 
 
 		public bool IsAbsoluteCoord
 		{ get { return G != null && G.Number == 90; } }
