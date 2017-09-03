@@ -721,12 +721,7 @@ namespace LaserGRBL.RasterConverter
 						conf.oY = TargetOffset.Y;
 						conf.borderSpeed = BorderSpeed;
 
-						//if ((bool)Settings.GetObject("Support Hardware PWM", true))
-						//	conf.mod = ModulationMode.PowerModulation;
-						//else
-						//	conf.mod = ModulationMode.BinaryModulation;
-
-						conf.mod = ModulationMode.SpeedModulation;
+						conf.mod = WhatModulate;
 
 						if (SelectedTool == ImageProcessor.Tool.Line2Line || SelectedTool == ImageProcessor.Tool.Dithering)
 							mCore.LoadedFile.LoadImageL2L(bmp, mFileName, conf);
@@ -904,5 +899,7 @@ namespace LaserGRBL.RasterConverter
 
 
 		public Bitmap Original { get {return mResized;}}
+
+		public ModulationMode WhatModulate { get; set; }
 	}
 }

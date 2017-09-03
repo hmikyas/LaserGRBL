@@ -55,13 +55,19 @@ namespace LaserGRBL.RasterConverter
 			CbDirections.SelectedIndex = 0;
 			CbDirections.ResumeLayout();
 
+			CbWhatModulate.SuspendLayout();
+			if (supportPWM) CbWhatModulate.AddItem(ImageProcessor.ModulationMode.PowerModulation);
+			CbWhatModulate.AddItem(ImageProcessor.ModulationMode.SpeedModulation);
+			CbWhatModulate.SelectedIndex = 0;
+			CbWhatModulate.ResumeLayout();
+
 			CbFillingDirection.SuspendLayout();
 			foreach (ImageProcessor.Direction direction in Enum.GetValues(typeof(ImageProcessor.Direction)))
 				CbFillingDirection.AddItem(direction);
 			CbFillingDirection.SelectedIndex = 0;
 			CbFillingDirection.ResumeLayout();
 
-			RbLineToLineTracing.Visible = supportPWM;
+			RbLineToLineTracing.Visible = true; // supportPWM;
 
 			LoadSettings();
 			RefreshVE();
@@ -171,6 +177,7 @@ namespace LaserGRBL.RasterConverter
 			Settings.SetObject("GrayScaleConversion.Line2LineOptions.Direction", (ImageProcessor.Direction)CbDirections.SelectedItem);
 			Settings.SetObject("GrayScaleConversion.Line2LineOptions.Quality", UDQuality.Value);
 			Settings.SetObject("GrayScaleConversion.Line2LineOptions.Preview", CbLinePreview.Checked);
+			Settings.SetObject("GrayScaleConversion.Line2LineOptions.WhatModulate", (ImageProcessor.ModulationMode)CbWhatModulate.SelectedItem);
 
 			Settings.SetObject("GrayScaleConversion.VectorizeOptions.SpotRemoval.Enabled", CbSpotRemoval.Checked);
 			Settings.SetObject("GrayScaleConversion.VectorizeOptions.SpotRemoval.Value", UDSpotRemoval.Value);
@@ -225,6 +232,12 @@ namespace LaserGRBL.RasterConverter
 				RbVectorize.Checked = true;
 
 			CbDirections.SelectedItem = IP.LineDirection = (ImageProcessor.Direction)Settings.GetObject("GrayScaleConversion.Line2LineOptions.Direction", ImageProcessor.Direction.Horizontal);
+
+			if (!supportPWM)
+				CbWhatModulate.SelectedItem = IP.WhatModulate = ImageProcessor.ModulationMode.SpeedModulation;
+			else
+				CbWhatModulate.SelectedItem = IP.WhatModulate = (ImageProcessor.ModulationMode)Settings.GetObject("GrayScaleConversion.Line2LineOptions.WhatModulate", ImageProcessor.ModulationMode.PowerModulation);
+			
 			UDQuality.Value = (decimal)(IP.Quality = Convert.ToDouble(Settings.GetObject("GrayScaleConversion.Line2LineOptions.Quality", 3.0)));
 			CbLinePreview.Checked = IP.LinePreview = (bool)Settings.GetObject("GrayScaleConversion.Line2LineOptions.Preview", false);
 
@@ -255,7 +268,7 @@ namespace LaserGRBL.RasterConverter
 
 			CbDither.SelectedItem = (ImageTransform.DitheringMode)Settings.GetObject("GrayScaleConversion.DitheringOptions.DitheringMode", ImageTransform.DitheringMode.FloydSteinberg);
 
-			if (RbLineToLineTracing.Checked && !supportPWM)
+			if (RbLineToLineTracing.Checked && !true) //if (RbLineToLineTracing.Checked && !supportPWM)
 				RbDithering.Checked = true;
 		}
 
@@ -614,6 +627,11 @@ namespace LaserGRBL.RasterConverter
 
 		private void TBWhiteClip_MouseUp(object sender, MouseEventArgs e)
 		{ if (IP != null) IP.Demo = false; }
+
+		private void CbWhatModulate_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			{ if (IP != null) IP.WhatModulate = (ImageProcessor.ModulationMode)CbWhatModulate.SelectedItem; }
+		}
 
 	}
 }

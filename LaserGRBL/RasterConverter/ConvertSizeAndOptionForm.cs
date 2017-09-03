@@ -80,6 +80,9 @@ namespace LaserGRBL.RasterConverter
 			IIOffsetX.CurrentValue = IP.TargetOffset.X = (int)Settings.GetObject("GrayScaleConversion.Gcode.Offset.X", 0);
 			IIOffsetY.CurrentValue = IP.TargetOffset.Y = (int)Settings.GetObject("GrayScaleConversion.Gcode.Offset.Y", 0);
 
+			BtnModulationInfo.Visible = LblSmax.Visible = LblSmin.Visible = IIMaxPower.Visible = IIMinPower.Visible = IP.WhatModulate == ImageProcessor.ModulationMode.PowerModulation;
+			BtnSpeedModulationInfo.Visible = LblFmax.Visible = LblFmin.Visible = IIMaxSpeed.Visible = IIMinSpeed.Visible = IP.WhatModulate == ImageProcessor.ModulationMode.SpeedModulation;
+
 			ShowDialog();
 		}
 		
@@ -151,6 +154,11 @@ namespace LaserGRBL.RasterConverter
 		private void CBLaserOFF_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			IP.LaserOff = (string)CBLaserOFF.SelectedItem;
+		}
+
+		private void BtnSpeedModulationInfo_Click(object sender, EventArgs e)
+		{
+			System.Diagnostics.Process.Start(@"http://lasergrbl.com/usage/raster-image-import/target-image-size-and-laser-options/#speed-modulation");
 		}
 		
 	}

@@ -344,7 +344,7 @@ namespace LaserGRBL
 			List<GrblCommand> temp = new List<GrblCommand>();
 			foreach (ColorSegment seg in segments)
 			{
-				bool changespeed = (fast != seg.Fast); //se veloce != dafareveloce
+				bool changeFast = (fast != seg.Fast); //se veloce != dafareveloce
 
 				if (seg.IsSeparator && !fast) //fast = previous segment contains S0 color
 				{
@@ -353,12 +353,12 @@ namespace LaserGRBL
 					else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 						temp.Add(new GrblCommand(c.lOff)); //laser off
 					else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
-						temp.Add(new GrblCommand(c.lOn)); //laser off
+						temp.Add(new GrblCommand(c.lOn)); //laser ON
 				}
 
 				fast = seg.Fast;
 
-				if (changespeed)
+				if (changeFast)
 					temp.Add(new GrblCommand(String.Format("{0} F{1} {2}", fast ? "G0" : "G1", fast ? c.travelSpeed : c.markSpeed, seg.ToString())));
 				else
 					temp.Add(new GrblCommand(seg.ToString()));
@@ -367,12 +367,15 @@ namespace LaserGRBL
 				//	list.Add(new GrblCommand(lOn));
 			}
 
-			//temp = OptimizeLine2Line(temp, c);
+			temp = OptimizeLine2Line(temp, c);
 			list.AddRange(temp);
 		}
 
 		private List<GrblCommand> OptimizeLine2Line(List<GrblCommand> temp, L2LConf c)
 		{
+			if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation) //optimization not managed jet!
+				return temp;
+
 			List<GrblCommand> rv = new List<GrblCommand>();
 
 			decimal cumX = 0;
@@ -675,8 +678,8 @@ namespace LaserGRBL
 						else
 							curAlpha = 255;
 
-						if (curAlpha > 255 || curAlpha < 0)
-							curAlpha = 255;
+						if (curAlpha > 255 || curAlpha < 0) //warning: if this append there are something wrong!
+							curAlpha = Math.Max(0, Math.Min(curAlpha, 255));
 					}
 
 					if (analyze && cmd.S != null)
@@ -793,8 +796,8 @@ namespace LaserGRBL
 				finally { cmd.DeleteHelper(); }
 			}
 
-			if (analyze && list.Count > 10 && ((double)speedChanges / (double)list.Count) > 0.9)
-				mIsSpeedModulated = true;
+			if (analyze)
+				mIsSpeedModulated = list.Count > 10 && ((double)speedChanges / (double)list.Count) > 0.9;
 			
 		}
 

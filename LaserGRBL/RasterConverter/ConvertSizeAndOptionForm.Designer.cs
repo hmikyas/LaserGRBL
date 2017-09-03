@@ -99,6 +99,11 @@ namespace LaserGRBL.RasterConverter
 			this.LblLinearFilling = new System.Windows.Forms.Label();
 			this.GbLaser = new System.Windows.Forms.GroupBox();
 			this.tableLayoutPanel7 = new System.Windows.Forms.TableLayoutPanel();
+			this.BtnSpeedModulationInfo = new LaserGRBL.UserControls.ImageButton();
+			this.IIMaxSpeed = new LaserGRBL.UserControls.IntegerInput.IntegerInputRanged();
+			this.LblFmax = new System.Windows.Forms.Label();
+			this.IIMinSpeed = new LaserGRBL.UserControls.IntegerInput.IntegerInputRanged();
+			this.LblFmin = new System.Windows.Forms.Label();
 			this.BtnModulationInfo = new LaserGRBL.UserControls.ImageButton();
 			this.label26 = new System.Windows.Forms.Label();
 			this.LblSmin = new System.Windows.Forms.Label();
@@ -325,6 +330,11 @@ namespace LaserGRBL.RasterConverter
 			// tableLayoutPanel7
 			// 
 			resources.ApplyResources(this.tableLayoutPanel7, "tableLayoutPanel7");
+			this.tableLayoutPanel7.Controls.Add(this.BtnSpeedModulationInfo, 4, 2);
+			this.tableLayoutPanel7.Controls.Add(this.IIMaxSpeed, 3, 2);
+			this.tableLayoutPanel7.Controls.Add(this.LblFmax, 2, 2);
+			this.tableLayoutPanel7.Controls.Add(this.IIMinSpeed, 1, 2);
+			this.tableLayoutPanel7.Controls.Add(this.LblFmin, 0, 2);
 			this.tableLayoutPanel7.Controls.Add(this.BtnModulationInfo, 4, 1);
 			this.tableLayoutPanel7.Controls.Add(this.label26, 2, 0);
 			this.tableLayoutPanel7.Controls.Add(this.LblSmin, 0, 1);
@@ -336,6 +346,51 @@ namespace LaserGRBL.RasterConverter
 			this.tableLayoutPanel7.Controls.Add(this.CBLaserON, 1, 0);
 			this.tableLayoutPanel7.Controls.Add(this.CBLaserOFF, 3, 0);
 			this.tableLayoutPanel7.Name = "tableLayoutPanel7";
+			// 
+			// BtnSpeedModulationInfo
+			// 
+			this.BtnSpeedModulationInfo.AltImage = null;
+			resources.ApplyResources(this.BtnSpeedModulationInfo, "BtnSpeedModulationInfo");
+			this.BtnSpeedModulationInfo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+			this.BtnSpeedModulationInfo.Coloration = System.Drawing.Color.Empty;
+			this.BtnSpeedModulationInfo.Image = ((System.Drawing.Image)(resources.GetObject("BtnSpeedModulationInfo.Image")));
+			this.BtnSpeedModulationInfo.Name = "BtnSpeedModulationInfo";
+			this.BtnSpeedModulationInfo.SizingMode = LaserGRBL.UserControls.ImageButton.SizingModes.FixedSize;
+			this.TT.SetToolTip(this.BtnSpeedModulationInfo, resources.GetString("BtnSpeedModulationInfo.ToolTip"));
+			this.BtnSpeedModulationInfo.UseAltImage = false;
+			this.BtnSpeedModulationInfo.Click += new System.EventHandler(this.BtnSpeedModulationInfo_Click);
+			// 
+			// IIMaxSpeed
+			// 
+			resources.ApplyResources(this.IIMaxSpeed, "IIMaxSpeed");
+			this.IIMaxSpeed.CurrentValue = 6000;
+			this.IIMaxSpeed.ForcedText = null;
+			this.IIMaxSpeed.ForceMinMax = false;
+			this.IIMaxSpeed.MaxValue = 20000;
+			this.IIMaxSpeed.MinValue = 1;
+			this.IIMaxSpeed.Name = "IIMaxSpeed";
+			this.IIMaxSpeed.NormalBorderColor = System.Drawing.SystemColors.ActiveBorder;
+			// 
+			// LblFmax
+			// 
+			resources.ApplyResources(this.LblFmax, "LblFmax");
+			this.LblFmax.Name = "LblFmax";
+			// 
+			// IIMinSpeed
+			// 
+			resources.ApplyResources(this.IIMinSpeed, "IIMinSpeed");
+			this.IIMinSpeed.CurrentValue = 1000;
+			this.IIMinSpeed.ForcedText = null;
+			this.IIMinSpeed.ForceMinMax = false;
+			this.IIMinSpeed.MaxValue = 20000;
+			this.IIMinSpeed.MinValue = 1;
+			this.IIMinSpeed.Name = "IIMinSpeed";
+			this.IIMinSpeed.NormalBorderColor = System.Drawing.SystemColors.ActiveBorder;
+			// 
+			// LblFmin
+			// 
+			resources.ApplyResources(this.LblFmin, "LblFmin");
+			this.LblFmin.Name = "LblFmin";
 			// 
 			// BtnModulationInfo
 			// 
@@ -486,5 +541,10 @@ namespace LaserGRBL.RasterConverter
 		private System.Windows.Forms.ComboBox CBLaserON;
 		private System.Windows.Forms.ComboBox CBLaserOFF;
 		private System.Windows.Forms.ToolTip TT;
+		private UserControls.ImageButton BtnSpeedModulationInfo;
+		private UserControls.IntegerInput.IntegerInputRanged IIMaxSpeed;
+		private System.Windows.Forms.Label LblFmax;
+		private UserControls.IntegerInput.IntegerInputRanged IIMinSpeed;
+		private System.Windows.Forms.Label LblFmin;
 	}
 }
