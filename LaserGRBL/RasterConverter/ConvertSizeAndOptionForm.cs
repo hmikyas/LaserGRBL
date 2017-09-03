@@ -73,6 +73,9 @@ namespace LaserGRBL.RasterConverter
 			IIMinPower.CurrentValue = IP.MinPower = (int)Settings.GetObject("GrayScaleConversion.Gcode.LaserOptions.PowerMin", 0);
 			IIMaxPower.CurrentValue = IP.MaxPower = (int)Settings.GetObject("GrayScaleConversion.Gcode.LaserOptions.PowerMax", 255);
 
+			IIMinSpeed.CurrentValue = IP.MinSpeed = (int)Settings.GetObject("GrayScaleConversion.Gcode.LaserOptions.SpeedMin", 1000);
+			IIMaxSpeed.CurrentValue = IP.MaxSpeed = (int)Settings.GetObject("GrayScaleConversion.Gcode.LaserOptions.SpeedMax", 4000);
+
 			IILinearFilling.Visible = LblLinearFilling.Visible = LblLinearFillingmm.Visible = (IP.SelectedTool == ImageProcessor.Tool.Line2Line || IP.SelectedTool == ImageProcessor.Tool.Dithering || (IP.SelectedTool == ImageProcessor.Tool.Vectorize && (IP.FillingDirection != ImageProcessor.Direction.None)));
 			IIBorderTracing.Visible = LblBorderTracing.Visible = LblBorderTracingmm.Visible = (IP.SelectedTool == ImageProcessor.Tool.Vectorize);
 			LblLinearFilling.Text = IP.SelectedTool == ImageProcessor.Tool.Vectorize ? "Filling Speed" : "Engraving Speed";

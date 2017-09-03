@@ -213,6 +213,8 @@ namespace LaserGRBL.RasterConverter
 			Settings.SetObject("GrayScaleConversion.Gcode.LaserOptions.LaserOff", IP.LaserOff);
 			Settings.SetObject("GrayScaleConversion.Gcode.LaserOptions.PowerMin", IP.MinPower);
 			Settings.SetObject("GrayScaleConversion.Gcode.LaserOptions.PowerMax", IP.MaxPower);
+			Settings.GetObject("GrayScaleConversion.Gcode.LaserOptions.SpeedMin", IP.MinSpeed);
+			Settings.GetObject("GrayScaleConversion.Gcode.LaserOptions.SpeedMax", IP.MaxSpeed);
 
 			Settings.SetObject("GrayScaleConversion.Gcode.Offset.X", IP.TargetOffset.X);
 			Settings.SetObject("GrayScaleConversion.Gcode.Offset.Y", IP.TargetOffset.Y);

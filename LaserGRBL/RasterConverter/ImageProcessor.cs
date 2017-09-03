@@ -67,13 +67,16 @@ namespace LaserGRBL.RasterConverter
 		public int MarkSpeed;
 		public int MinPower;
 		public int MaxPower;
-		
+		public int MinSpeed;
+		public int MaxSpeed;
+
 		private string mFileName;
 		GrblCore mCore;
 		
 		private ImageProcessor Current; 		//current instance of processor thread/class - used to call abort
 		Thread TH;								//processing thread
 		protected ManualResetEvent MustExit;	//exit condition
+
 
 		
 		public enum Tool
@@ -712,8 +715,9 @@ namespace LaserGRBL.RasterConverter
 						conf.fres = fres;
 						conf.markSpeed = MarkSpeed;
 						conf.travelSpeed = TravelSpeed;
-						conf.modWhite = MinPower;
-						conf.modBlack = MaxPower;
+
+						conf.modWhite = WhatModulate == ModulationMode.SpeedModulation ? MinSpeed : MinPower;
+						conf.modBlack = WhatModulate == ModulationMode.SpeedModulation ? MaxSpeed : MaxPower;
 						conf.lOn = LaserOn;
 						conf.lOff = LaserOff;
 						conf.dir = SelectedTool == ImageProcessor.Tool.Vectorize ? FillingDirection : LineDirection;
