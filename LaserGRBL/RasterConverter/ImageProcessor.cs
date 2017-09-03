@@ -82,6 +82,9 @@ namespace LaserGRBL.RasterConverter
 		public enum Direction
 		{ Horizontal, Vertical, Diagonal, None }
 
+		public enum ModulationMode
+		{ PowerModulation, SpeedModulation, BinaryModulation}
+
 		public ImageProcessor(GrblCore core, string fileName, Size boxSize)
 		{
 			mCore = core;
@@ -709,15 +712,21 @@ namespace LaserGRBL.RasterConverter
 						conf.fres = fres;
 						conf.markSpeed = MarkSpeed;
 						conf.travelSpeed = TravelSpeed;
-						conf.minPower = MinPower;
-						conf.maxPower = MaxPower;
+						conf.modWhite = MinPower;
+						conf.modBlack = MaxPower;
 						conf.lOn = LaserOn;
 						conf.lOff = LaserOff;
 						conf.dir = SelectedTool == ImageProcessor.Tool.Vectorize ? FillingDirection : LineDirection;
 						conf.oX = TargetOffset.X;
 						conf.oY = TargetOffset.Y;
 						conf.borderSpeed = BorderSpeed;
-						conf.pwm = (bool)Settings.GetObject("Support Hardware PWM", true);
+
+						//if ((bool)Settings.GetObject("Support Hardware PWM", true))
+						//	conf.mod = ModulationMode.PowerModulation;
+						//else
+						//	conf.mod = ModulationMode.BinaryModulation;
+
+						conf.mod = ModulationMode.SpeedModulation;
 
 						if (SelectedTool == ImageProcessor.Tool.Line2Line || SelectedTool == ImageProcessor.Tool.Dithering)
 							mCore.LoadedFile.LoadImageL2L(bmp, mFileName, conf);

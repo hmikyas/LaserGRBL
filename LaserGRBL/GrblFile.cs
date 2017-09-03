@@ -20,6 +20,7 @@ namespace LaserGRBL
 		private decimal mTotalTravelOff;
 		private TimeSpan mEstimatedTimeOn;
 		private TimeSpan mEstimatedTimeOff;
+		private bool mIsSpeedModulated;
 
 		public void SaveProgram(string filename)
 		{
@@ -84,7 +85,19 @@ namespace LaserGRBL
 			{get {return false;}}
 			
 			public bool Fast
-			{get {return mConf.pwm ? mColor == 0 : mColor <= 125;}}
+			{
+				get 
+				{
+					if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
+						return mColor == 0; //use fast speed only if S0
+					else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
+						return mColor == 0; //use fast on laser off (0/1 mean off/on)
+					else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
+						return false; //never use fast speed
+					else
+						throw new NotImplementedException();
+				}
+			}
 			
 			public string formatnumber(double number)
 			{ return number.ToString("#.###", System.Globalization.CultureInfo.InvariantCulture); }
@@ -96,10 +109,14 @@ namespace LaserGRBL
 			
 			public override string ToString()
 			{
-				if (mConf.pwm)
+				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 					return string.Format("X{0} S{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
-				else
+				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 					return string.Format("X{0} {1}", formatnumber(mReverse ? -mLen : mLen), Fast ? mConf.lOff : mConf.lOn);
+				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
+					return string.Format("X{0} F{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
+				else
+					throw new NotImplementedException();
 			}
 		}
 
@@ -109,10 +126,14 @@ namespace LaserGRBL
 			
 			public override string ToString()
 			{
-				if (mConf.pwm)
+				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 					return string.Format("Y{0} S{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
-				else
+				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 					return string.Format("Y{0} {1}", formatnumber(mReverse ? -mLen : mLen), Fast ? mConf.lOff : mConf.lOn);
+				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
+					return string.Format("Y{0} F{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
+				else
+					throw new NotImplementedException();
 			}
 		}
 		
@@ -122,10 +143,14 @@ namespace LaserGRBL
 			
 			public override string ToString()
 			{
-				if (mConf.pwm)
-					return string.Format("X{0} Y{1} S{2}", formatnumber(mReverse ? - mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor);
-				else
+				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
+					return string.Format("X{0} Y{1} S{2}", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor);
+				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 					return string.Format("X{0} Y{1} {2}", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), Fast ? mConf.lOff : mConf.lOn);
+				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
+					return string.Format("X{0} Y{1} F{2}", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor);
+				else
+					throw new NotImplementedException();
 			}
 		}	
 
@@ -188,9 +213,12 @@ namespace LaserGRBL
 							list.Add(new GrblCommand(String.Format("F{0}", c.travelSpeed)));
 							//move fast to offset
 							list.Add(new GrblCommand(String.Format("G0 X{0} Y{1}", formatnumber(c.oX), formatnumber(c.oY))));
-							if (c.pwm)
+							
+							if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 								list.Add(new GrblCommand(String.Format("{0} S0", c.lOn))); //laser on and power to zero
-							else
+							else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
+								list.Add(new GrblCommand(String.Format("{0} S255", c.lOff))); //laser off and power to max power
+							else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
 								list.Add(new GrblCommand(String.Format("{0} S255", c.lOff))); //laser off and power to max power
 
 							//set speed to markspeed						
@@ -216,7 +244,7 @@ namespace LaserGRBL
 			//move fast to offset
 			list.Add(new GrblCommand(String.Format("G0 X{0} Y{1}", formatnumber(c.oX), formatnumber(c.oY))));
 			//laser off and power to maxPower
-			list.Add(new GrblCommand(String.Format("{0} S{1}", c.lOff, c.maxPower))); 
+			list.Add(new GrblCommand(String.Format("{0} S{1}", c.lOff, c.modBlack))); 
 			//set speed to borderspeed
 			list.Add(new GrblCommand(String.Format("G1 F{0}", c.borderSpeed)));
 	
@@ -248,14 +276,17 @@ namespace LaserGRBL
 			public int markSpeed;
 			public int travelSpeed;
 			public int borderSpeed;
-			public int minPower;
-			public int maxPower;
+			public int minPower; //white
+			public int maxPower; //black
 			public string lOn;
 			public string lOff;
 			public RasterConverter.ImageProcessor.Direction dir;
-			public bool pwm;
+			public RasterConverter.ImageProcessor.ModulationMode mod;
 			public double fres;
 			public bool vectorfilling;
+
+			public int modWhite;	//white
+			public int modBlack;	//black
 		}
 
 		public void LoadImageL2L(Bitmap bmp, string filename, L2LConf c)
@@ -277,9 +308,12 @@ namespace LaserGRBL
 			list.Add(new GrblCommand(String.Format("F{0}", c.travelSpeed)));
 			//move fast to offset
 			list.Add(new GrblCommand(String.Format("G0 X{0} Y{1}", formatnumber(c.oX), formatnumber(c.oY))));
-			if (c.pwm)
+
+			if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 				list.Add(new GrblCommand(String.Format("{0} S0", c.lOn))); //laser on and power to zero
-			else
+			else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
+				list.Add(new GrblCommand(String.Format("{0} S255", c.lOff))); //laser off and power to maxpower
+			else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
 				list.Add(new GrblCommand(String.Format("{0} S255", c.lOff))); //laser off and power to maxpower
 
 			//set speed to markspeed						
@@ -314,10 +348,12 @@ namespace LaserGRBL
 
 				if (seg.IsSeparator && !fast) //fast = previous segment contains S0 color
 				{
-					if (c.pwm)
+					if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 						temp.Add(new GrblCommand("S0"));
-					else
+					else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 						temp.Add(new GrblCommand(c.lOff)); //laser off
+					else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
+						temp.Add(new GrblCommand(c.lOn)); //laser off
 				}
 
 				fast = seg.Fast;
@@ -331,7 +367,7 @@ namespace LaserGRBL
 				//	list.Add(new GrblCommand(lOn));
 			}
 
-			temp = OptimizeLine2Line(temp, c);
+			//temp = OptimizeLine2Line(temp, c);
 			list.AddRange(temp);
 		}
 
@@ -351,7 +387,7 @@ namespace LaserGRBL
 
 					bool oldcumulate = cumulate;
 
-					if (c.pwm)
+					if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 					{
 						if (cmd.S != null) //is S command
 						{
@@ -361,7 +397,7 @@ namespace LaserGRBL
 								cumulate = false;  //end cumulate
 						}
 					}
-					else
+					if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 					{
 						if (cmd.IsLaserOFF)
 							cumulate = true;   //begin cumulate
@@ -372,9 +408,9 @@ namespace LaserGRBL
 
 					if (oldcumulate && !cumulate) //cumulate down front -> flush
 					{
-						if (c.pwm)
+						if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
 							rv.Add(new GrblCommand(string.Format("G0 X{0} Y{1} F{2} S0", formatnumber((double)cumX), formatnumber((double)cumY), c.travelSpeed)));
-						else
+						else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
 							rv.Add(new GrblCommand(string.Format("G0 X{0} Y{1} F{2} {3}", formatnumber((double)cumX), formatnumber((double)cumY), c.travelSpeed, c.lOff)));
 
 						cumX = cumY = 0;
@@ -508,7 +544,7 @@ namespace LaserGRBL
 		private void ExtractSegment(Bitmap image, int x, int y, bool reverse, ref int len, ref int prevCol, List<ColorSegment> rv, L2LConf c)
 		{
 			len++;
-			int col = GetColor(image, x, y, c.minPower, c.maxPower, c.pwm);
+			int col = GetModulatedColorValue(image, x, y, c);
 			if (prevCol == -1)
 				prevCol = col;
 
@@ -527,18 +563,19 @@ namespace LaserGRBL
 			prevCol = col;
 		}
 
-
-		private int GetColor(Bitmap I, int X, int Y, int min, int max, bool pwm)
+		private int GetModulatedColorValue(Bitmap I, int X, int Y, L2LConf c)
 		{
 			Color C = I.GetPixel(X, Y);
 			int rv = (255 - C.R) * C.A / 255;
 
-			if (rv == 0)
-				return 0; //zero is always zero
-			else if (pwm)
-				return rv * (max - min) / 255 + min; //scale to range
+			if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
+				return (c.modBlack - c.modWhite) * rv / 255 + c.modWhite; //scale WHITE-BLACK 0-255 to range SMIN-SMAX
+			else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
+				return rv <= 125 ? 0 : 1; //zero for black, 1 for white
+			else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
+				return c.modBlack + rv * (c.modWhite - c.modBlack) / 255; //scale WHITE-BLACK 0-255 to range FMAX-FMIN
 			else
-				return rv;
+				throw new NotImplementedException();
 		}
 
 		public string formatnumber(double number)
@@ -560,6 +597,7 @@ namespace LaserGRBL
 
 		private void Process(Graphics g, Size s)
 		{
+			int speedChanges = 0;
 			bool supportPWM = (bool)Settings.GetObject("Support Hardware PWM", true);
             bool laserMode = (bool)Settings.GetObject("Laser Mode", false);
 			Boolean analyze = (g == null);
@@ -601,41 +639,43 @@ namespace LaserGRBL
 					TimeSpan delay = TimeSpan.Zero;
 
 					if (cmd.IsLaserON)
-					{
 						isLaserActive = true;
-						isLaserCutting = true;
-					}
 					else if (cmd.IsLaserOFF)
-					{
 						isLaserActive = false;
-						isLaserCutting = false;
-					}
 
-					if (laserMode == true && isLaserActive == true)
-					{
-						if (cmd.IsRapidMovement == true)
-						{
-							isLaserCutting = false;
-						}
-						else
-						{
-							isLaserCutting = true;
-						}
-					}
+					//se è attivo il lasermode, il laser viene spento sui movimenti rapidi
+					isLaserCutting = isLaserActive && !(laserMode && cmd.IsRapidMovement);
 
 					if (cmd.IsRelativeCoord)
 						abs = false;
 					if (cmd.IsAbsoluteCoord)
 						abs = true;
 
-					if (cmd.F != null)
-						speed = cmd.F.Number;
+					if (analyze && cmd.F != null && speed != cmd.F.Number && isLaserCutting)
+					{
+						speedChanges++;
+						mRange.UpdateFRange(cmd.F.Number);
+					}
 
-					if (drawing && cmd.S != null)
+					if (cmd.F != null && speed != cmd.F.Number)
+						speed = cmd.F.Number;
+					
+					if (drawing && !mIsSpeedModulated && cmd.S != null)
 					{
 						if (mRange.SpindleRange.ValidRange)
 							curAlpha = (int)((cmd.S.Number - mRange.SpindleRange.S.Min) * 255 / (mRange.SpindleRange.S.Max - mRange.SpindleRange.S.Min));
 						else
+							curAlpha = 255;
+					}
+
+					if (drawing && mIsSpeedModulated && cmd.F != null)
+					{
+						if (mRange.SpeedRange.ValidRange)
+							curAlpha = 255 - (int)((cmd.F.Number - mRange.SpeedRange.F.Min) * 255 / (mRange.SpeedRange.F.Max - mRange.SpeedRange.F.Min));
+						else
+							curAlpha = 255;
+
+						if (curAlpha > 255 || curAlpha < 0)
 							curAlpha = 255;
 					}
 
@@ -752,6 +792,9 @@ namespace LaserGRBL
 				catch (Exception ex) { throw ex; }
 				finally { cmd.DeleteHelper(); }
 			}
+
+			if (analyze && list.Count > 10 && ((double)speedChanges / (double)list.Count) > 0.9)
+				mIsSpeedModulated = true;
 			
 		}
 
@@ -909,7 +952,7 @@ namespace LaserGRBL
 				}
 
 				public bool ValidRange
-				{ get { return Min != Max && Min != decimal.MaxValue && Max != decimal.MinValue && Max > 0; } }
+				{ get { return Min != Max && Min != decimal.MaxValue && Max != decimal.MinValue && Min >= 0 && Max > 0; } }
 			}
 
 			public Range S = new Range();
@@ -928,9 +971,52 @@ namespace LaserGRBL
 			{ get { return S.ValidRange; } }
 		}
 
+		public class FRange
+		{
+			public class Range
+			{
+				public decimal Min;
+				public decimal Max;
+
+				public Range()
+				{ ResetRange(); }
+
+				public void UpdateRange(decimal val)
+				{
+					Min = Math.Min(Min, val);
+					Max = Math.Max(Max, val);
+				}
+
+				public void ResetRange()
+				{
+					Min = decimal.MaxValue;
+					Max = decimal.MinValue;
+				}
+
+				public bool ValidRange
+				{ get { return Min != Max && Min != decimal.MaxValue && Max != decimal.MinValue && Max > 0 && Min > 0; } }
+			}
+
+			public Range F = new Range();
+
+			public void UpdateRange(decimal f)
+			{
+				F.UpdateRange(f);
+			}
+
+			public void ResetRange()
+			{
+				F.ResetRange();
+			}
+
+			public bool ValidRange
+			{ get { return F.ValidRange; } }
+		}
+
 		public XYRange DrawingRange = new XYRange();
 		public XYRange MovingRange = new XYRange();
 		public SRange SpindleRange = new SRange();
+		public FRange SpeedRange = new FRange();
 
 		public void UpdateXYRange(decimal x, decimal y, bool drawing)
 		{
@@ -942,11 +1028,15 @@ namespace LaserGRBL
 		public void UpdateSRange(decimal s)
 		{ SpindleRange.UpdateRange(s); }
 
+		public void UpdateFRange(decimal f)
+		{ SpeedRange.UpdateRange(f); }
+
 		public void ResetRange()
 		{
 			DrawingRange.ResetRange();
 			MovingRange.ResetRange();
 			SpindleRange.ResetRange();
+			SpeedRange.ResetRange();
 		}
 
 	}
