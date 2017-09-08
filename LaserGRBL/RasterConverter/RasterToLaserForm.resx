@@ -2010,7 +2010,7 @@
     <value>24</value>
   </data>
   <data name="CbWhatModulate.ToolTip" xml:space="preserve">
-    <value>Engraving direction</value>
+    <value>Modulate power or speed</value>
   </data>
   <data name="&gt;&gt;CbWhatModulate.Name" xml:space="preserve">
     <value>CbWhatModulate</value>
