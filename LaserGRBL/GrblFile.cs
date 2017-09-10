@@ -110,11 +110,11 @@ namespace LaserGRBL
 			public override string ToString()
 			{
 				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
-					return string.Format("X{0} S{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
+					return string.Format("{0} X{1} S{2} {3}", Fast ? "G0" : "G1" , formatnumber(mReverse ? -mLen : mLen), mColor, mConf.lOn);
 				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
-					return string.Format("X{0} {1}", formatnumber(mReverse ? -mLen : mLen), Fast ? mConf.lOff : mConf.lOn);
+					return string.Format("{0} X{1} {2}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), Fast ? mConf.lOff : mConf.lOn);
 				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
-					return string.Format("X{0} F{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
+					return string.Format("{0} X{1} F{2} {3}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), mColor, mConf.lOn);
 				else
 					throw new NotImplementedException();
 			}
@@ -127,11 +127,11 @@ namespace LaserGRBL
 			public override string ToString()
 			{
 				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
-					return string.Format("Y{0} S{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
+					return string.Format("{0} Y{1} S{2} {3}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), mColor, mConf.lOn);
 				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
-					return string.Format("Y{0} {1}", formatnumber(mReverse ? -mLen : mLen), Fast ? mConf.lOff : mConf.lOn);
+					return string.Format("{0} Y{1} {2}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), Fast ? mConf.lOff : mConf.lOn);
 				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
-					return string.Format("Y{0} F{1}", formatnumber(mReverse ? -mLen : mLen), mColor);
+					return string.Format("{0} Y{1} F{2} {3}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), mColor, mConf.lOn);
 				else
 					throw new NotImplementedException();
 			}
@@ -144,11 +144,11 @@ namespace LaserGRBL
 			public override string ToString()
 			{
 				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
-					return string.Format("X{0} Y{1} S{2}", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor);
+					return string.Format("{0} X{1} Y{2} S{3} {4}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor, mConf.lOn);
 				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
-					return string.Format("X{0} Y{1} {2}", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), Fast ? mConf.lOff : mConf.lOn);
+					return string.Format("{0} X{1} Y{2} {3}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), Fast ? mConf.lOff : mConf.lOn);
 				else if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
-					return string.Format("X{0} Y{1} F{2}", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor);
+					return string.Format("{0} X{1} Y{2} F{3} {4}", Fast ? "G0" : "G1", formatnumber(mReverse ? -mLen : mLen), formatnumber(mReverse ? mLen : -mLen), mColor, mConf.lOn);
 				else
 					throw new NotImplementedException();
 			}
@@ -159,7 +159,12 @@ namespace LaserGRBL
 			public VSeparator(L2LConf c) : base(0, 1, false, c) {}
 			
 			public override string ToString()
-			{return string.Format("Y{0}", formatnumber(mLen));}
+			{
+				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
+					return string.Format("G1 Y{0} S0", formatnumber(mLen));
+				else
+					return string.Format("G1 Y{0} {1}", formatnumber(mLen), mConf.lOff);
+			}
 			
 			public override bool IsSeparator
 			{get {return true;}}
@@ -170,7 +175,12 @@ namespace LaserGRBL
 			public HSeparator(L2LConf c) : base(0, 1, false, c) {}
 			
 			public override string ToString()
-			{return string.Format("X{0}", formatnumber(mLen));}
+			{
+				if (mConf.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
+					return string.Format("G1 X{0} S0", formatnumber(mLen));
+				else
+					return string.Format("G1 X{0} {1}", formatnumber(mLen), mConf.lOff);
+			}
 			
 			public override bool IsSeparator
 			{get {return true;}}
@@ -302,25 +312,18 @@ namespace LaserGRBL
 			list.Clear();
 			mRange.ResetRange();
 
+
+			//laser off
+			list.Add(new GrblCommand(c.lOff)); 
 			//absolute
 			list.Add(new GrblCommand("G90"));
-			//use travel speed
-			list.Add(new GrblCommand(String.Format("F{0}", c.travelSpeed)));
 			//move fast to offset
-			list.Add(new GrblCommand(String.Format("G0 X{0} Y{1}", formatnumber(c.oX), formatnumber(c.oY))));
+			list.Add(new GrblCommand(String.Format("G0 X{0} Y{1} F{2}", formatnumber(c.oX), formatnumber(c.oY), c.travelSpeed)));
 
-			if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
-				list.Add(new GrblCommand(String.Format("{0} S0", c.lOn))); //laser on and power to zero
-			else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
-				list.Add(new GrblCommand(String.Format("{0} S255", c.lOff))); //laser off and power to maxpower
-			else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
-				list.Add(new GrblCommand(String.Format("{0} S255", c.lOff))); //laser off and power to maxpower
-
-			//set speed to markspeed						
-			list.Add(new GrblCommand(String.Format("G1 F{0}", c.markSpeed)));
 			//relative
 			list.Add(new GrblCommand("G91"));
 
+			//generate line2line code
 			ImageLine2Line(bmp, c);
 
 			//laser off
@@ -342,32 +345,11 @@ namespace LaserGRBL
 			bool fast = false;
 			List<ColorSegment> segments = GetSegments(bmp, c);
 			List<GrblCommand> temp = new List<GrblCommand>();
+
 			foreach (ColorSegment seg in segments)
-			{
-				bool changeFast = (fast != seg.Fast); //se veloce != dafareveloce
+				temp.Add(new GrblCommand(seg.ToString()));
 
-				if (seg.IsSeparator && !fast) //fast = previous segment contains S0 color
-				{
-					if (c.mod == RasterConverter.ImageProcessor.ModulationMode.PowerModulation)
-						temp.Add(new GrblCommand("S0"));
-					else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.BinaryModulation)
-						temp.Add(new GrblCommand(c.lOff)); //laser off
-					else if (c.mod == RasterConverter.ImageProcessor.ModulationMode.SpeedModulation)
-						temp.Add(new GrblCommand(c.lOn)); //laser ON
-				}
-
-				fast = seg.Fast;
-
-				if (changeFast)
-					temp.Add(new GrblCommand(String.Format("{0} F{1} {2}", fast ? "G0" : "G1", fast ? c.travelSpeed : c.markSpeed, seg.ToString())));
-				else
-					temp.Add(new GrblCommand(seg.ToString()));
-
-				//if (seg.IsSeparator)
-				//	list.Add(new GrblCommand(lOn));
-			}
-
-			temp = OptimizeLine2Line(temp, c);
+			//temp = OptimizeLine2Line(temp, c);
 			list.AddRange(temp);
 		}
 
